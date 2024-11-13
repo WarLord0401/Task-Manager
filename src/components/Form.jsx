@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import styled from "styled-components";
 
 const Form = ({ addTask }) => {
+  const [title, setTitle] = useState(""); // New state for the title
   const [message, setMessage] = useState("");
   const [reminderTime, setReminderTime] = useState("");
   const [priority, setPriority] = useState("");
+  const [isTitleValid, setIsTitleValid] = useState(true); // Validation for title
   const [isMessageValid, setIsMessageValid] = useState(true);
   const [isReminderTimeValid, setIsReminderTimeValid] = useState(true);
   const [isPriorityValid, setIsPriorityValid] = useState(true);
@@ -13,6 +15,10 @@ const Form = ({ addTask }) => {
     e.preventDefault();
     let valid = true;
 
+    if (!title) {
+      setIsTitleValid(false);
+      valid = false;
+    }
     if (!message) {
       setIsMessageValid(false);
       valid = false;
@@ -27,10 +33,12 @@ const Form = ({ addTask }) => {
     }
 
     if (valid) {
-      addTask(message, reminderTime, priority);
+      addTask(title, message, reminderTime, priority); // Include title in task
+      setTitle("");
       setMessage("");
       setReminderTime("");
       setPriority("");
+      setIsTitleValid(true);
       setIsMessageValid(true);
       setIsReminderTimeValid(true);
       setIsPriorityValid(true);
@@ -41,6 +49,16 @@ const Form = ({ addTask }) => {
 
   return (
     <FormContainer onSubmit={handleSubmit}>
+      <Input
+        type="text"
+        placeholder="Enter task title" // Title input placeholder
+        value={title}
+        onChange={(e) => {
+          setTitle(e.target.value);
+          setIsTitleValid(true); // Reset validation on change
+        }}
+        isValid={isTitleValid}
+      />
       <Input
         type="text"
         placeholder="Enter task message"

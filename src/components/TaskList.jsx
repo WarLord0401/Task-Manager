@@ -5,6 +5,7 @@ import styled from "styled-components";
 const TaskList = ({ tasks, removeTask }) => {
   const [sortedTasks, setSortedTasks] = useState(tasks);
   const [sortCriteria, setSortCriteria] = useState("timeAsc"); // Default sorting by time ascending
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
 
   // Sorting function based on priority
   const sortByPriorityAsc = (a, b) => {
@@ -37,6 +38,7 @@ const TaskList = ({ tasks, removeTask }) => {
       let sortedArray = [...tasks]; // Create a copy of the tasks
 
       switch (criteria) {
+        
         case "priorityAsc":
           sortedArray.sort(sortByPriorityAsc);
           break;
@@ -65,6 +67,13 @@ const TaskList = ({ tasks, removeTask }) => {
 
   return (
     <div>
+      {/* search bar */}
+      <SearchBar
+        type="text"
+        placeholder="Search tasks..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
       {/* Conditionally render sorting options */}
       {tasks.length > 1 && (
         <SortDropdown
@@ -84,15 +93,14 @@ const TaskList = ({ tasks, removeTask }) => {
       ) : tasks.length === 1 ? (
         <TaskContainer>
           <TaskTile>
-            <div style={{ display: "flex", flexDirection: "row" }}>
-              <TaskTitle>{tasks[0].message}</TaskTitle>
-              <TimeDetails>
-                {new Date(tasks[0].reminderTime).toLocaleString()}
-              </TimeDetails>
-              <PriorityTag priority={tasks[0].priority}>
-                Priority: {tasks[0].priority}
-              </PriorityTag>
-            </div>
+            <TaskTitle>{tasks[0].message}</TaskTitle>
+            <TimeDetails>
+              {new Date(tasks[0].reminderTime).toLocaleString()}
+            </TimeDetails>
+            <PriorityTag priority={tasks[0].priority}>
+              Priority: {tasks[0].priority}
+            </PriorityTag>
+
             <DeleteButton onClick={() => removeTask(tasks[0].message)}>
               Delete
             </DeleteButton>
@@ -131,6 +139,24 @@ const TaskList = ({ tasks, removeTask }) => {
 };
 
 export default TaskList;
+
+const SearchBar = styled.input`
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  margin: 20px 0;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease;
+
+  &:focus {
+    background-color: #e6f7ff;
+    border-color: #80bfff;
+    outline: none;
+  }
+`;
 
 // Styled components
 const TaskContainer = styled(motion.div)`
