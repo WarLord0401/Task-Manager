@@ -30,6 +30,9 @@ const Form = ({ addTask }) => {
         onChange={(e) => setReminderTime(e.target.value)}
       />
       <Select value={priority} onChange={(e) => setPriority(e.target.value)}>
+        <option value="" disabled>
+          Priority
+        </option>
         <option value="High">High</option>
         <option value="Medium">Medium</option>
         <option value="Low">Low</option>
