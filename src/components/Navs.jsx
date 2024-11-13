@@ -29,8 +29,6 @@ const Navs = () => {
   );
 };
 
-// Styled-components for the elements
-
 const Navbar = styled.nav`
   background-color: #282c34;
   padding: 10px 0;
@@ -50,7 +48,7 @@ const NavItem = styled.li`
 `;
 
 const StyledNavLink = styled(NavLink)`
-  color: white;
+  color: grey;
   text-decoration: none;
   font-weight: bold;
 
@@ -62,7 +60,7 @@ const StyledNavLink = styled(NavLink)`
   ${({ isActive }) =>
     isActive &&
     `
-    color: grey;
+    color: white;
   `}
 `;
 

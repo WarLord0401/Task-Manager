@@ -1,13 +1,13 @@
 import React from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
-import About from "./pages/About";
-import Home from "./pages/Home";
-import Navs from "./pages/Navs";
+import Navs from "./components/Navs"; // Import the Navs component for navigation
+import About from "./pages/About"; // Import the About page
+import Home from "./pages/Home"; // Import the Home page
 
 const App = () => {
   return (
     <Router>
-      <Navs />
+      <Navs /> {/* Navigation component */}
       <div style={{ padding: "20px" }}>
         <Routes>
           <Route path="/" element={<Home />} />
