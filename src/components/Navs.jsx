@@ -37,7 +37,14 @@ const Navbar = styled.nav`
   padding: 15px 20px;
   display: flex;
   justify-content: center;
+  align-items: center; /* Optional: to vertically center the content */
   border-bottom: 2px solid #007bff; /* Optional: add accent color underline */
+  position: fixed; /* Fix the navbar to the top of the page */
+  top: 0; /* Ensure it stays at the top */
+  left: 0; /* Ensure it stays on the left side */
+  width: 100%; /* Ensure it stretches across the entire screen */
+  z-index: 1000; /* Make sure it stays above other content */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Optional: add shadow for better visibility */
 `;
 
 const NavList = styled.ul`

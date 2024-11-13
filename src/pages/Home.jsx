@@ -61,6 +61,7 @@ const Home = () => {
 export default Home;
 
 const Title = styled.div`
+margin-top: 50px;
   text-align: center;
   margin-bottom: 20px;
   color: #333;
