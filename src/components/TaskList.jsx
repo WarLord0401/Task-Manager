@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 
@@ -60,7 +61,7 @@ const TaskList = ({ tasks, removeTask }) => {
   // Update sorted tasks whenever 'tasks' or 'sortCriteria' changes
   useEffect(() => {
     handleSort(sortCriteria);
-  }, [tasks, sortCriteria, handleSort]); // Adding 'handleSort' to dependencies
+  }, [tasks, sortCriteria, handleSort]);
 
   return (
     <div>
@@ -83,25 +84,45 @@ const TaskList = ({ tasks, removeTask }) => {
       ) : tasks.length === 1 ? (
         <TaskContainer>
           <TaskTile>
-            <div>
-              <strong>{tasks[0].message}</strong>
-              <p>{new Date(tasks[0].reminderTime).toLocaleString()}</p>
-              <p>Priority: {tasks[0].priority}</p>
+            <div style={{ display: "flex", flexDirection: "row" }}>
+              <TaskTitle>{tasks[0].message}</TaskTitle>
+              <TimeDetails>
+                {new Date(tasks[0].reminderTime).toLocaleString()}
+              </TimeDetails>
+              <PriorityTag priority={tasks[0].priority}>
+                Priority: {tasks[0].priority}
+              </PriorityTag>
             </div>
-            <button onClick={() => removeTask(tasks[0].message)}>Delete</button>
+            <DeleteButton onClick={() => removeTask(tasks[0].message)}>
+              Delete
+            </DeleteButton>
           </TaskTile>
         </TaskContainer>
       ) : (
         <TaskContainer>
           {sortedTasks.map((task, index) => (
-            <TaskTile key={index}>
-              <div>
-                <strong>{task.message}</strong>
-                <p>{new Date(task.reminderTime).toLocaleString()}</p>
-                <p>Priority: {task.priority}</p>
-              </div>
-              <button onClick={() => removeTask(task.message)}>Delete</button>
-            </TaskTile>
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.5 }}
+            >
+              <TaskTile>
+                <TaskTitle>{task.message}</TaskTitle>
+                <Details>
+                  <TimeDetails>
+                    {new Date(task.reminderTime).toLocaleString()}
+                  </TimeDetails>
+                  <PriorityTag priority={task.priority}>
+                    Priority: {task.priority}
+                  </PriorityTag>
+                </Details>
+                <DeleteButton onClick={() => removeTask(task.message)}>
+                  Delete
+                </DeleteButton>
+              </TaskTile>
+            </motion.div>
           ))}
         </TaskContainer>
       )}
@@ -112,20 +133,107 @@ const TaskList = ({ tasks, removeTask }) => {
 export default TaskList;
 
 // Styled components
-const TaskContainer = styled.div`
+const TaskContainer = styled(motion.div)`
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 15px;
+  padding: 10px;
+  width: 100%; /* Ensure full width */
+  max-width: 100%; /* Optional, as width: 100% would already suffice */
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  justify-content: space-between; /* Ensure even distribution of items */
+
+  @media (max-width: 730px) {
+    flex-direction: column; /* Stack items vertically on small screens */
+    align-items: center; /* Center items on smaller screens */
+  }
 `;
 
 const TaskTile = styled.div`
-  background-color: #f4f4f4;
-  padding: 10px;
-  border-radius: 5px;
+  background-color: #ffffff;
+  padding: 20px;
+  width: 20vw;
+  max-width: 350px; /* To prevent the tile from becoming too large on bigger screens */
+  max-height: 20vh;
+  min-height: 150px; /* Set a minimum height for consistency */
+  border-radius: 12px; /* Slightly more rounded corners */
+  display: flex;
+  flex-direction: column; /* Stack items vertically */
+  justify-content: space-between;
+  align-items: flex-start;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effect */
+  background: linear-gradient(
+    145deg,
+    #f0f0f0,
+    #e6e6e6
+  ); /* Soft gradient for a modern look */
+
+  &:hover {
+    transform: translateY(-5px); /* Lift the card on hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow on hover */
+  }
+
+  & > * {
+    margin-bottom: 10px; /* Add spacing between child elements */
+  }
+  @media (max-width: 730px) {
+    max-height: fit-content;
+    width: 50%;
+  }
+`;
+
+const TaskTitle = styled.h3`
+  font-size: 18px;
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 5px; /* Space between title and content */
+`;
+
+const TimeDetails = styled.p`
+  font-size: 14px;
+  color: #555;
+  line-height: 1.4;
+  margin-bottom: 10px;
+`;
+
+const PriorityTag = styled.span`
+  margin-right: 0px;
+  background-color: ${(props) =>
+    props.priority === "High"
+      ? "#9c34fd"
+      : props.priority === "Medium"
+      ? "#66b3ff"
+      : "#28f919"};
+  color: white;
+  padding: 12px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+`;
+
+const Details = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: center; /* Aligns items vertically in the center */
+  width: 100%; /* Ensures it takes up the full width of the container */
+  @media (max-width: 730px) {
+    flex-direction: column;
+    align-items: flex-start; /* Aligns items to the start on smaller screens */
+  }
+`;
+
+const DeleteButton = styled.button`
+  background-color: #f49b36; /* Red button for delete */
+  padding: 8px 16px;
+  font-size: 14px;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  &:hover {
+    background-color: #e53935; /* Darker red on hover */
+  }
 `;
 
 const SortDropdown = styled.select`
@@ -146,4 +254,5 @@ const Message = styled.div`
   font-size: 18px;
   color: #555;
   margin-top: 20px;
+  text-align: center;
 `;

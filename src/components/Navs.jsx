@@ -29,39 +29,47 @@ const Navs = () => {
   );
 };
 
+export default Navs;
+
+// Styled Components
 const Navbar = styled.nav`
-  background-color: #282c34;
-  padding: 10px 0;
+  background-color: #343a40; /* Darker shade for navbar */
+  padding: 15px 20px;
   display: flex;
   justify-content: center;
+  border-bottom: 2px solid #007bff; /* Optional: add accent color underline */
 `;
 
 const NavList = styled.ul`
-  margin-left: -40px;
-  list-style: none;
   display: flex;
-  gap: 20px;
+  gap: 30px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 `;
 
 const NavItem = styled.li`
-  font-size: 18px;
+  font-size: 1.1rem;
 `;
 
 const StyledNavLink = styled(NavLink)`
-  color: grey;
+  color: #bbb;
   text-decoration: none;
-  font-weight: bold;
+  font-weight: 500;
+  padding: 8px 15px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 
   &:hover {
-    text-decoration: underline;
+    color: white;
+    background-color: #495057;
   }
 
-  // Apply active color when the link is active
+  /* Apply active color when the link is active */
   ${({ isActive }) =>
     isActive &&
     `
-    color: white;
+    color: #007bff;
+    background-color: #495057;
   `}
 `;
-
-export default Navs;
