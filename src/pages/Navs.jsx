@@ -1,42 +1,69 @@
-// Navs.tsx
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import styled from "styled-components";
 
 const Navs = () => {
+  const location = useLocation(); // Get the current location (URL)
+
   return (
-    <nav style={styles.navbar}>
-      <ul style={styles.navList}>
-        <li style={styles.navItem}>
-          <Link to="/" style={styles.navLink}>Home</Link>
-        </li>
-        <li style={styles.navItem}>
-          <Link to="/about" style={styles.navLink}>About</Link>
-        </li>
-      </ul>
-    </nav>
+    <Navbar>
+      <NavList>
+        <NavItem>
+          <StyledNavLink
+            to="/"
+            isActive={location.pathname === "/"} // Check if current path is "/"
+          >
+            Home
+          </StyledNavLink>
+        </NavItem>
+        <NavItem>
+          <StyledNavLink
+            to="/about"
+            isActive={location.pathname === "/about"} // Check if current path is "/about"
+          >
+            About
+          </StyledNavLink>
+        </NavItem>
+      </NavList>
+    </Navbar>
   );
 };
 
-const styles = {
-  navbar: {
-    backgroundColor: '#282c34',
-    padding: '10px 0',
-    display: 'flex',
-    justifyContent: 'center',
-  },
-  navList: {
-    listStyle: 'none',
-    display: 'flex',
-    gap: '20px',
-  },
-  navItem: {
-    fontSize: '18px',
-  },
-  navLink: {
-    color: 'white',
-    textDecoration: 'none',
-    fontWeight: 'bold',
-  },
-};
+// Styled-components for the elements
+
+const Navbar = styled.nav`
+  background-color: #282c34;
+  padding: 10px 0;
+  display: flex;
+  justify-content: center;
+`;
+
+const NavList = styled.ul`
+  margin-left: -40px;
+  list-style: none;
+  display: flex;
+  gap: 20px;
+`;
+
+const NavItem = styled.li`
+  font-size: 18px;
+`;
+
+const StyledNavLink = styled(NavLink)`
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  // Apply active color when the link is active
+  ${({ isActive }) =>
+    isActive &&
+    `
+    color: grey;
+  `}
+`;
 
 export default Navs;
