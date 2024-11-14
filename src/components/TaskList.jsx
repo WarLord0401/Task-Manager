@@ -1,13 +1,38 @@
 import { motion } from "framer-motion";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 
 const TaskList = ({ tasks, removeTask }) => {
   const [sortedTasks, setSortedTasks] = useState(tasks);
-  const [sortCriteria, setSortCriteria] = useState("timeAsc"); // Default sorting by time ascending
+  const [sortCriteria, setSortCriteria] = useState(""); // Default sorting by time ascending
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  const [showCompleted, setShowCompleted] = useState(false); // State to toggle Completed Tasks view
+  const [completedTasks, setCompletedTasks] = useState([]); // State to store completed tasks
 
-  // Sorting function based on priority
+  // Handle task completion toggle
+  const handleTaskCompletion = (taskId) => {
+    setCompletedTasks((prev) => {
+      const taskIndex = prev.findIndex((task) => task.id === taskId);
+      if (taskIndex === -1) {
+        const task = tasks.find((task) => task.id === taskId);
+        return [...prev, { ...task, completed: true }];
+      } else {
+        return prev.filter((task) => task.id !== taskId);
+      }
+    });
+  };
+
+  // Filter tasks by completed status
+  const filteredTasks = useMemo(() => {
+    const tasksToShow = showCompleted ? completedTasks : sortedTasks;
+    return tasksToShow.filter(
+      (task) =>
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.priority.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [showCompleted, searchQuery, sortedTasks, completedTasks]);
+
   const sortByPriorityAsc = (a, b) => {
     const priorityOrder = { High: 1, Medium: 2, Low: 3 };
     return priorityOrder[a.priority] - priorityOrder[b.priority];
@@ -18,7 +43,6 @@ const TaskList = ({ tasks, removeTask }) => {
     return priorityOrder[b.priority] - priorityOrder[a.priority];
   };
 
-  // Sorting function based on time
   const sortByTimeAsc = (a, b) => {
     const timeA = new Date(a.reminderTime);
     const timeB = new Date(b.reminderTime);
@@ -31,14 +55,12 @@ const TaskList = ({ tasks, removeTask }) => {
     return timeB - timeA;
   };
 
-  // Memoized handleSort function to avoid unnecessary re-creations
   const handleSort = useCallback(
     (criteria) => {
       setSortCriteria(criteria);
-      let sortedArray = [...tasks]; // Create a copy of the tasks
+      let sortedArray = [...tasks];
 
       switch (criteria) {
-        
         case "priorityAsc":
           sortedArray.sort(sortByPriorityAsc);
           break;
@@ -58,75 +80,82 @@ const TaskList = ({ tasks, removeTask }) => {
       setSortedTasks(sortedArray);
     },
     [tasks]
-  ); // Only recreate handleSort if 'tasks' changes
+  );
 
-  // Update sorted tasks whenever 'tasks' or 'sortCriteria' changes
   useEffect(() => {
     handleSort(sortCriteria);
   }, [tasks, sortCriteria, handleSort]);
 
   return (
     <div>
-      {/* search bar */}
-      <SearchBar
-        type="text"
-        placeholder="Search tasks..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
-      {/* Conditionally render sorting options */}
-      {tasks.length > 1 && (
-        <SortDropdown
-          onChange={(e) => handleSort(e.target.value)}
-          value={sortCriteria}
-        >
-          <option value="timeAsc">Sort by Time (Ascending)</option>
-          <option value="timeDesc">Sort by Time (Descending)</option>
-          <option value="priorityDesc">Sort by Priority (Ascending)</option>
-          <option value="priorityAsc">Sort by Priority (Descending)</option>
-        </SortDropdown>
-      )}
+      <ControlsContainer>
+        <SearchBar
+          type="text"
+          placeholder="Search tasks..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <Button onClick={() => setShowCompleted((prev) => !prev)}>
+          {showCompleted ? "All Tasks" : "Completed Tasks"}
+        </Button>
+        {tasks.length > 1 && (
+          <SortDropdown
+            onChange={(e) => handleSort(e.target.value)}
+            value={sortCriteria}
+          >
+            <option value="timeAsc">Sort by Time (Ascending)</option>
+            <option value="timeDesc">Sort by Time (Descending)</option>
+            <option value="priorityAsc">Sort by Priority (Ascending)</option>
+            <option value="priorityDesc">Sort by Priority (Descending)</option>
+          </SortDropdown>
+        )}
+      </ControlsContainer>
 
-      {/* Conditionally render task list or message */}
-      {tasks.length === 0 ? (
-        <Message>No tasks available. Add a task!</Message>
-      ) : tasks.length === 1 ? (
-        <TaskContainer>
-          <TaskTile>
-            <TaskTitle>{tasks[0].message}</TaskTitle>
-            <TimeDetails>
-              {new Date(tasks[0].reminderTime).toLocaleString()}
-            </TimeDetails>
-            <PriorityTag priority={tasks[0].priority}>
-              Priority: {tasks[0].priority}
-            </PriorityTag>
-
-            <DeleteButton onClick={() => removeTask(tasks[0].message)}>
-              Delete
-            </DeleteButton>
-          </TaskTile>
-        </TaskContainer>
+      {/* Displaying message for no tasks or search results */}
+      {filteredTasks.length === 0 ? (
+        searchQuery ? (
+          <Message>Not Found</Message> // Show "Not Found" if search query is provided and no tasks match.
+        ) : showCompleted ? (
+          completedTasks.length === 0 ? (
+            <Message>No task completed</Message> // Show "No task completed" if showCompleted is true and no completed tasks exist.
+          ) : (
+            <Message>Not Found</Message> // Show "Not Found" if showCompleted is true but no tasks match the completed tasks.
+          )
+        ) : (
+          <Message>No tasks available. Add a task!</Message> // Show this when there are no tasks available to display.
+        )
       ) : (
         <TaskContainer>
-          {sortedTasks.map((task, index) => (
+          {filteredTasks.map((task) => (
             <motion.div
-              key={index}
+              key={task.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.5 }}
             >
               <TaskTile>
-                <TaskTitle>{task.message}</TaskTitle>
+                <TaskTitle>{task.title}</TaskTitle>
+                <TaskMessage>{task.message}</TaskMessage>
                 <Details>
                   <TimeDetails>
                     {new Date(task.reminderTime).toLocaleString()}
                   </TimeDetails>
                   <PriorityTag priority={task.priority}>
-                    Priority: {task.priority}
+                    {task.priority}
                   </PriorityTag>
                 </Details>
-                <DeleteButton onClick={() => removeTask(task.message)}>
+                <CompletionCheck>
+                  <input
+                    type="checkbox"
+                    id={`task-complete-${task.id}`}
+                    name="task-status"
+                    checked={completedTasks.some((t) => t.id === task.id)}
+                    onChange={() => handleTaskCompletion(task.id)}
+                  />
+                  <label htmlFor={`task-complete-${task.id}`}>Complete</label>
+                </CompletionCheck>
+                <DeleteButton onClick={() => removeTask(task.id)}>
                   Delete
                 </DeleteButton>
               </TaskTile>
@@ -140,16 +169,56 @@ const TaskList = ({ tasks, removeTask }) => {
 
 export default TaskList;
 
+const Button = styled.button`
+  padding: 10px;
+  display: flex;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #f3f3f3;
+  color: #323232;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  transition: border-color 0.3s ease;
+
+  &:hover {
+    background-color: #e6e6e6;
+  }
+`;
+const CompletionCheck = styled.div`
+  width: 90%;
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 15px;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+
+  &:focus {
+    box-shadow: 0px 4px 10px rgba(0, 123, 255, 0.2);
+    border-color: #007bff;
+  }
+`;
+
+const ControlsContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  align-items: center;
+  gap: 10px;
+  @media (max-width: 980px) {
+    display: flex;
+    flex-direction: column;
+  }
+`;
+
 const SearchBar = styled.input`
   width: 100%;
   padding: 10px;
   font-size: 16px;
   margin: 20px 0;
-  border-radius: 5px;
+  border-radius: 8px;
   border: 1px solid #ccc;
   background-color: #f9f9f9;
   box-sizing: border-box;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 
   &:focus {
     background-color: #e6f7ff;
@@ -158,53 +227,44 @@ const SearchBar = styled.input`
   }
 `;
 
-// Styled components
 const TaskContainer = styled(motion.div)`
   display: flex;
-  gap: 15px;
-  padding: 10px;
-  width: 100%; /* Ensure full width */
-  max-width: 100%; /* Optional, as width: 100% would already suffice */
-  flex-wrap: wrap; /* Allow wrapping on smaller screens */
-  justify-content: space-between; /* Ensure even distribution of items */
+  flex-wrap: wrap;
+  justify-content: space-around;
+  padding-top: 10px;
+  width: 100%;
+  max-width: 100%;
 
   @media (max-width: 730px) {
-    flex-direction: column; /* Stack items vertically on small screens */
-    align-items: center; /* Center items on smaller screens */
+    flex-direction: column;
+    align-items: center;
   }
 `;
 
 const TaskTile = styled.div`
-  background-color: #ffffff;
   padding: 20px;
-  width: 20vw;
-  max-width: 350px; /* To prevent the tile from becoming too large on bigger screens */
-  max-height: 20vh;
-  min-height: 150px; /* Set a minimum height for consistency */
-  border-radius: 12px; /* Slightly more rounded corners */
+  width: 100%;
+  max-width: 350px;
+  border-radius: 15px;
   display: flex;
-  flex-direction: column; /* Stack items vertically */
+  flex-direction: column;
   justify-content: space-between;
-  align-items: flex-start;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effect */
-  background: linear-gradient(
-    145deg,
-    #f0f0f0,
-    #e6e6e6
-  ); /* Soft gradient for a modern look */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: linear-gradient(145deg, #f5f5f5, #727272);
 
   &:hover {
-    transform: translateY(-5px); /* Lift the card on hover */
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow on hover */
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   }
 
   & > * {
-    margin-bottom: 10px; /* Add spacing between child elements */
+    margin-bottom: 10px;
   }
+
   @media (max-width: 730px) {
     max-height: fit-content;
-    width: 50%;
+    width: 100%;
   }
 `;
 
@@ -212,73 +272,95 @@ const TaskTitle = styled.h3`
   font-size: 18px;
   color: #333;
   font-weight: bold;
-  margin-bottom: 5px; /* Space between title and content */
+  margin-bottom: 5px;
+  text-transform: capitalize;
+`;
+
+const TaskMessage = styled.h4`
+  text-align: justify;
+  font-size: 16px;
+  color: #5f5f5f;
+  margin-bottom: 5px;
 `;
 
 const TimeDetails = styled.p`
   font-size: 14px;
-  color: #555;
+  color: #777;
   line-height: 1.4;
   margin-bottom: 10px;
 `;
 
 const PriorityTag = styled.span`
-  margin-right: 0px;
+  margin-right: 8px;
+  min-width: 5vw;
+  text-align: center;
   background-color: ${(props) =>
     props.priority === "High"
-      ? "#9c34fd"
+      ? "#d9534f"
       : props.priority === "Medium"
-      ? "#66b3ff"
-      : "#28f919"};
+      ? "#f0ad4e"
+      : "#5cb85c"};
   color: white;
-  padding: 12px 10px;
-  border-radius: 20px;
+  padding: 6px 12px;
+  border-radius: 15px;
   font-size: 12px;
   font-weight: bold;
 `;
 
-const Details = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center; /* Aligns items vertically in the center */
-  width: 100%; /* Ensures it takes up the full width of the container */
-  @media (max-width: 730px) {
-    flex-direction: column;
-    align-items: flex-start; /* Aligns items to the start on smaller screens */
+const DeleteButton = styled.button`
+  background-color: #d9534f;
+  color: white;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 20px;
+  width: 90%;
+  margin: 0 auto;
+  display: block;
+  cursor: pointer;
+  &:hover {
+    background-color: #c9302c;
   }
 `;
 
-const DeleteButton = styled.button`
-  background-color: #f49b36; /* Red button for delete */
-  padding: 8px 16px;
-  font-size: 14px;
-  color: white;
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  &:hover {
-    background-color: #e53935; /* Darker red on hover */
-  }
-`;
+// Adjust other styling as needed for layout and spacing.
 
 const SortDropdown = styled.select`
   padding: 10px;
   font-size: 16px;
-  margin: 10px;
   cursor: pointer;
-  background-color: #282c34;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  &:hover {
-    background-color: #3a3f47;
+  background-color: #f3f3f3;
+  color: #323232;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  transition: border-color 0.3s ease;
+
+  &:focus {
+    border-color: #80bfff;
+    outline: none;
   }
 `;
+const Details = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 
+  @media (max-width: 730px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+`;
 const Message = styled.div`
   font-size: 18px;
   color: #555;
-  margin-top: 20px;
+  font-weight: bold;
   text-align: center;
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
