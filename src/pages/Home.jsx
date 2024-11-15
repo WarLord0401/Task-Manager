@@ -1,5 +1,5 @@
 import { motion } from "framer-motion"; // Import Framer Motion
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import Form from "../components/Form";
 import TaskList from "../components/TaskList";
@@ -12,6 +12,7 @@ const Home = () => {
   };
 
   const [tasks, setTasks] = useState(loadTasksFromLocalStorage());
+  const [reminder, setReminder] = useState(null); // Initialize reminder state
 
   useEffect(() => {
     localStorage.setItem("tasks", JSON.stringify(tasks));
@@ -25,6 +26,32 @@ const Home = () => {
     setTasks((prevTasks) => [...prevTasks, newTask]);
   };
 
+  const checkReminders = useCallback(() => {
+    const now = new Date().toISOString();
+    tasks.forEach((task) => {
+      if (task.reminderTime && new Date(task.reminderTime) <= new Date(now)) {
+        setReminder({
+          title: task.title,
+          message: task.message,
+          priority: task.priority,
+        });
+
+        // Clear reminder message after 5 seconds
+        setTimeout(() => {
+          setReminder(null);
+        }, 5000); // Clear the reminder after 5 seconds
+      }
+    });
+  }, [tasks]); // Only recreate the function if 'tasks' change
+
+  // Set an interval to check reminders every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkReminders();
+    }, 60000); // Check reminders every minute
+    return () => clearInterval(interval); // Cleanup interval on component unmount
+  }, [checkReminders]);
+
   const removeTask = (taskId) => {
     setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
   };
@@ -33,6 +60,12 @@ const Home = () => {
 
   return (
     <div>
+      {reminder && (
+        <ReminderDiv priority={reminder.priority}>
+          <h3>{reminder.title}</h3>
+          <p>{reminder.message}</p>
+        </ReminderDiv>
+      )}
       <div
         style={{
           marginTop: 55,
@@ -41,7 +74,6 @@ const Home = () => {
           paddingBottom: 50,
           backgroundColor: "#e4e2e2",
           borderRadius: 10,
-          
         }}
       >
         <Title
@@ -81,11 +113,28 @@ const Home = () => {
 
 export default Home;
 
+const ReminderDiv = styled.div`
+  position: fixed;
+  width: 100%;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: ${(props) =>
+    props.priority === "High"
+      ? "#d9534f"
+      : props.priority === "Medium"
+      ? "#f0ad4e"
+      : "#5cb85c"};
+  padding: 10px;
+  border-radius: 10px;
+  color: white;
+  font-size: 16px;
+  z-index: 1000;
+`;
+
 const Title = styled.div`
   margin-top: 50px;
   text-align: center;
   margin-bottom: 20px;
   color: #333;
 `;
-
-// Assume each tile within TaskList has motion settings
