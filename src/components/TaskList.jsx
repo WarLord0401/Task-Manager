@@ -9,6 +9,7 @@ const TaskList = ({ tasks, removeTask, taskContainerRef }) => {
   const [showCompleted, setShowCompleted] = useState(false);
   const [completedTasks, setCompletedTasks] = useState([]);
   const [expandedTaskId, setExpandedTaskId] = useState(null);
+
   // Handle task completion toggle
   const handleTaskCompletion = (taskId) => {
     setCompletedTasks((prev) => {
@@ -37,6 +38,7 @@ const TaskList = ({ tasks, removeTask, taskContainerRef }) => {
     return filterTasks(tasksToShow, searchQuery);
   }, [showCompleted, searchQuery, sortedTasks, completedTasks]);
 
+  /** Sorting Logic */
   const sortByPriorityAsc = (a, b) => {
     const priorityOrder = { High: 1, Medium: 2, Low: 3 };
     return priorityOrder[a.priority] - priorityOrder[b.priority];
@@ -119,10 +121,12 @@ const TaskList = ({ tasks, removeTask, taskContainerRef }) => {
             height: 40,
           }}
         >
+          {/** Button for toggling between All Tasks & Completeed Tasks */}
           <Button onClick={() => setShowCompleted((prev) => !prev)}>
             {showCompleted ? "All Tasks" : "Completed Tasks"}
           </Button>
           {tasks.length > 1 && (
+            /** Sorting Button */
             <SortDropdown
               onChange={(e) => handleSort(e.target.value)}
               value={sortCriteria}
@@ -164,6 +168,7 @@ const TaskList = ({ tasks, removeTask, taskContainerRef }) => {
               <TaskTile>
                 <TaskTitle>{task.title}</TaskTitle>
                 <TaskMessage>
+                  {/** Clipping Large messages and adding Read More button to read full message. */}
                   {expandedTaskId === task.id ? (
                     <p style={{ display: "flex", flexDirection: "column" }}>
                       {task.message.slice(0, 30)}...
@@ -467,7 +472,4 @@ const Message = styled.div`
   text-align: center;
   margin-top: 20px;
   padding: 10px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;

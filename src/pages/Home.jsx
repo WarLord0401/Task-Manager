@@ -5,6 +5,7 @@ import Form from "../components/Form";
 import TaskList from "../components/TaskList";
 
 const Home = () => {
+  /** Storing and accessing Tasks from Local Storage */
   const loadTasksFromLocalStorage = () => {
     const savedTasks = localStorage.getItem("tasks");
     return savedTasks ? JSON.parse(savedTasks) : [];
