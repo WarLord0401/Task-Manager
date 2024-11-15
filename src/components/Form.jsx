@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 
-const Form = ({ addTask }) => {
+const Form = ({ addTask, taskContainerRef }) => {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [reminderTime, setReminderTime] = useState("");
@@ -14,8 +14,18 @@ const Form = ({ addTask }) => {
     priority: false,
   });
 
+  const scrollToTasks = () => {
+    /* used to scroll to tasks */
+
+    if (taskContainerRef.current) {
+      taskContainerRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    /* Check if field is filled or not */
 
     setErrors({
       title: false,
@@ -65,7 +75,8 @@ const Form = ({ addTask }) => {
 
   return (
     <FormContainer onSubmit={handleSubmit}>
-      <div>
+      {/* Enter Title of Task */}
+      <div style={{ position: "relative" }}>
         <Label htmlFor="title">Task Title</Label>
         <Input
           id="title"
@@ -76,7 +87,10 @@ const Form = ({ addTask }) => {
         />
         {errors.title && <ErrorTile>Please enter a valid title.</ErrorTile>}
       </div>
-      <div>
+
+      {/* Enter Message of Task */}
+
+      <div style={{ position: "relative", marginTop: "15px" }}>
         <Label htmlFor="message">Task Message</Label>
         <Input
           id="message"
@@ -87,8 +101,11 @@ const Form = ({ addTask }) => {
         />
         {errors.message && <ErrorTile>Please enter a valid message.</ErrorTile>}
       </div>
+
+      {/* Enter Date & Priority of Task */}
+
       <Property>
-        <div>
+        <Container>
           <Label htmlFor="reminderTime">Reminder Time</Label>
           <InputTime
             id="reminderTime"
@@ -99,9 +116,9 @@ const Form = ({ addTask }) => {
           {errors.reminderTime && (
             <ErrorTile>Please select a valid reminder time.</ErrorTile>
           )}
-        </div>
+        </Container>
 
-        <div>
+        <Container>
           <Label htmlFor="priority">Priority</Label>
           <Select
             id="priority"
@@ -118,10 +135,16 @@ const Form = ({ addTask }) => {
           {errors.priority && (
             <ErrorTile2>Please select a priority.</ErrorTile2>
           )}
-        </div>
+        </Container>
       </Property>
 
-      <Button type="submit">Add Task</Button>
+      {/* Buttons for Submission and Scroll */}
+      <ButtonWrapper>
+        <Button type="submit">Add Task</Button>
+        <ViewButton type="button" onClick={scrollToTasks}>
+          View Tasks
+        </ViewButton>
+      </ButtonWrapper>
     </FormContainer>
   );
 };
@@ -131,64 +154,74 @@ export default Form;
 // Styled Components
 const FormContainer = styled.form`
   position: relative;
-  width: 40vw;
+  width: 50%;
   display: flex;
+  justify-content: space-around;
   flex-direction: column;
-  gap: 20px; /* Increased gap for better spacing between form elements */
-  padding: 30px; /* Added more padding for a more spacious feel */
+  gap: 40px;
+  padding: 40px;
+  padding-right: 60px;
   background-color: #f8f9fa;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
   border-radius: 12px;
-  margin: 40px auto; /* Increased margin for centering and spacing from the top */
+  margin: 40px auto;
+`;
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+  position: relative;
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 `;
 
 const Label = styled.label`
-  font-size: 16px; /* Slightly increased font size */
+  font-size: 18px;
   color: #333;
-  margin-bottom: 8px; /* Increased bottom margin */
+  margin-bottom: 8px;
   display: block;
-  font-weight: 600; /* Slightly bolder for better readability */
+  font-weight: 600;
+`;
+
+const Input = styled.input`
+  max-width: 100%;
+  width: 97%;
+  padding: 14px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  &:focus {
+    box-shadow: 0px 4px 10px rgba(0, 123, 255, 0.2);
+    border-color: #007bff;
+  }
 `;
 
 const Property = styled.div`
-  position: relative;
   display: flex;
-  justify-content: space-between; /* Ensures the elements are spaced apart */
-  align-items: center; /* Vertically centers the child elements */
-  margin-top: 15px; /* Added more spacing between fields */
-  width: 100%;
-  @media (max-width: 980px) {
-    display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  margin-top: 15px;
+  max-width: 100%;
+  width: 97%;
+  margin-bottom: 15px;
+  gap: 50px;
+
+  @media (max-width: 768px) {
+    gap: 50px;
     flex-direction: column;
     align-items: flex-start;
   }
 `;
 
-const Input = styled.input`
-  width: 90%;
-  padding: 14px; /* Added more padding for comfortable input */
-  font-size: 16px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  outline: none;
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
-
-  &:focus {
-    box-shadow: 0px 4px 10px rgba(0, 123, 255, 0.2);
-    border-color: #007bff;
-  }
-`;
-
-const InputTime = styled(Input)`
-  @media (max-width: 980px) {
-    margin-bottom: 20px;
-    width: 100px;
-  }
-`;
-
-const Select = styled.select`
+const InputTime = styled.input`
+  max-width: 100%;
   width: 100%;
-  padding: 14px; /* Increased padding for consistency */
+  padding: 14px;
+  margin-right: 1%;
   border-radius: 8px;
   color: #333;
   font-size: 16px;
@@ -202,8 +235,39 @@ const Select = styled.select`
   }
 `;
 
-const Button = styled.button`
+const Select = styled.select`
+  max-width: 100%;
+  width: 100%;
   padding: 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #333;
+  border: 1px solid #ddd;
+  outline: none;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  text-align: justify;
+  &:focus {
+    box-shadow: 0px 4px 10px rgba(0, 123, 255, 0.2);
+    border-color: #007bff;
+  }
+`;
+
+const ButtonWrapper = styled.div`
+  display: flex;
+  justify-content: space-around;
+  max-width: 100%;
+  width: 100%;
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 20px;
+  }
+`;
+
+const Button = styled.button`
+  max-width: 100%;
+  width: 50%;
+  padding: 14px;
+  margin-right: 1%;
   font-size: 16px;
   color: white;
   background-color: #007bff;
@@ -221,37 +285,83 @@ const Button = styled.button`
     background-color: #004085;
     transform: translateY(0);
   }
+
+  @media (max-width: 768px) {
+    white-space: nowrap;
+    padding: 10px;
+    width: 100%;
+  }
+`;
+
+const ViewButton = styled.button`
+  max-width: 100%;
+  width: 50%;
+  margin-right: 0px;
+  padding: 14px;
+  font-size: 16px;
+  color: #3c3c3c;
+  background-color: #bbbbbb;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+
+  &:hover {
+    background-color: #2f2f2f;
+    transform: translateY(-2px);
+    color: #bbbbbb;
+  }
+
+  &:active {
+    background-color: #004085;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 768px) {
+    white-space: nowrap;
+    width: 100%;
+    padding: 10px;
+  }
 `;
 
 const ErrorTile = styled.div`
-  left: 30%;
-  position: absolute; /* Position it absolutely within the container */
-  transform: translateY(-50%); /* Center vertically */
-  width: auto; /* Adjust width to content */
-  padding: 12px 16px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  transform: translateY(4px);
+  padding: 10px 14px;
   background-color: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
   border-radius: 8px;
-  font-size: 14px; /* Increased font size for better readability */
-  max-width: 100%;
-  z-index: 10; /* Ensure it appears above other content */
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow for better visibility */
+  font-size: 14px; /* Readable text */
+  max-width: calc(100% - 10px);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  @media (max-width: 768px) {
+    font-size: 12px;
+    max-width: 100%;
+  }
 `;
 
 const ErrorTile2 = styled.div`
+  position: absolute;
   top: 100%;
-  right: -20%;
-  position: absolute; /* Position it absolutely within the container */
-  transform: translateY(-50%); /* Center vertically */
-  width: auto; /* Adjust width to content */
-  padding: 12px 16px;
+  left: 0;
+  transform: translateY(4px);
+  padding: 10px 14px;
   background-color: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
   border-radius: 8px;
-  font-size: 14px; /* Increased font size for better readability */
-  max-width: 100%;
-  z-index: 10; /* Ensure it appears above other content */
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow for better visibility */
+  font-size: 14px;
+  max-width: calc(100% - 10px);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  z-index: 10;
+
+  @media (max-width: 768px) {
+    font-size: 12px;
+    max-width: 100%;
+  }
 `;

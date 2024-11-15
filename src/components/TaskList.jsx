@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 
-const TaskList = ({ tasks, removeTask }) => {
+const TaskList = ({ tasks, removeTask, taskContainerRef }) => {
   const [sortedTasks, setSortedTasks] = useState(tasks);
-  const [sortCriteria, setSortCriteria] = useState(""); // Default sorting by time ascending
-  const [searchQuery, setSearchQuery] = useState(""); // State for search query
-  const [showCompleted, setShowCompleted] = useState(false); // State to toggle Completed Tasks view
-  const [completedTasks, setCompletedTasks] = useState([]); // State to store completed tasks
-
+  const [sortCriteria, setSortCriteria] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showCompleted, setShowCompleted] = useState(false);
+  const [completedTasks, setCompletedTasks] = useState([]);
+  const [expandedTaskId, setExpandedTaskId] = useState(null);
   // Handle task completion toggle
   const handleTaskCompletion = (taskId) => {
     setCompletedTasks((prev) => {
@@ -23,14 +23,18 @@ const TaskList = ({ tasks, removeTask }) => {
   };
 
   // Filter tasks by completed status
+  const filterTasks = (tasks, query) => {
+    return tasks.filter(
+      (task) =>
+        task.title.toLowerCase().includes(query.toLowerCase()) ||
+        task.message.toLowerCase().includes(query.toLowerCase()) ||
+        task.priority.toLowerCase().includes(query.toLowerCase())
+    );
+  };
+
   const filteredTasks = useMemo(() => {
     const tasksToShow = showCompleted ? completedTasks : sortedTasks;
-    return tasksToShow.filter(
-      (task) =>
-        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.priority.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return filterTasks(tasksToShow, searchQuery);
   }, [showCompleted, searchQuery, sortedTasks, completedTasks]);
 
   const sortByPriorityAsc = (a, b) => {
@@ -88,6 +92,18 @@ const TaskList = ({ tasks, removeTask }) => {
 
   return (
     <div>
+      <h1
+        ref={taskContainerRef}
+        id="task-container"
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          color: "#3492d1",
+          fontSize: "50px",
+        }}
+      >
+        TASKS
+      </h1>
       <ControlsContainer>
         <SearchBar
           type="text"
@@ -95,20 +111,31 @@ const TaskList = ({ tasks, removeTask }) => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        <Button onClick={() => setShowCompleted((prev) => !prev)}>
-          {showCompleted ? "All Tasks" : "Completed Tasks"}
-        </Button>
-        {tasks.length > 1 && (
-          <SortDropdown
-            onChange={(e) => handleSort(e.target.value)}
-            value={sortCriteria}
-          >
-            <option value="timeAsc">Sort by Time (Ascending)</option>
-            <option value="timeDesc">Sort by Time (Descending)</option>
-            <option value="priorityAsc">Sort by Priority (Ascending)</option>
-            <option value="priorityDesc">Sort by Priority (Descending)</option>
-          </SortDropdown>
-        )}
+        <div
+          style={{
+            display: "flex",
+            border: "1px solid grey",
+            borderRadius: "10px",
+            height: 40,
+          }}
+        >
+          <Button onClick={() => setShowCompleted((prev) => !prev)}>
+            {showCompleted ? "All Tasks" : "Completed Tasks"}
+          </Button>
+          {tasks.length > 1 && (
+            <SortDropdown
+              onChange={(e) => handleSort(e.target.value)}
+              value={sortCriteria}
+            >
+              <option value="timeAsc">Sort by Time (Ascending)</option>
+              <option value="timeDesc">Sort by Time (Descending)</option>
+              <option value="priorityAsc">Sort by Priority (Ascending)</option>
+              <option value="priorityDesc">
+                Sort by Priority (Descending)
+              </option>
+            </SortDropdown>
+          )}
+        </div>
       </ControlsContainer>
 
       {/* Displaying message for no tasks or search results */}
@@ -136,7 +163,38 @@ const TaskList = ({ tasks, removeTask }) => {
             >
               <TaskTile>
                 <TaskTitle>{task.title}</TaskTitle>
-                <TaskMessage>{task.message}</TaskMessage>
+                <TaskMessage>
+                  {expandedTaskId === task.id ? (
+                    <p style={{ display: "flex", flexDirection: "column" }}>
+                      {task.message.slice(0, 30)}...
+                      <ReadMore onClick={() => setExpandedTaskId(task.id)}>
+                        Read more
+                      </ReadMore>
+                    </p>
+                  ) : (
+                    <>
+                      {task.message.length > 30 ? (
+                        <p style={{ display: "flex", flexDirection: "column" }}>
+                          {task.message.slice(0, 30)}...
+                          <ReadMore onClick={() => setExpandedTaskId(task.id)}>
+                            Read more
+                          </ReadMore>
+                        </p>
+                      ) : (
+                        <p>{task.message}</p>
+                      )}
+                    </>
+                  )}
+                </TaskMessage>
+                {expandedTaskId === task.id && (
+                  <FloatingTile>
+                    <p>{task.message}</p>
+                    <CloseButton onClick={() => setExpandedTaskId(null)}>
+                      Close
+                    </CloseButton>
+                  </FloatingTile>
+                )}
+
                 <Details>
                   <TimeDetails>
                     {new Date(task.reminderTime).toLocaleString()}
@@ -169,25 +227,57 @@ const TaskList = ({ tasks, removeTask }) => {
 
 export default TaskList;
 
-const Button = styled.button`
-  padding: 10px;
-  display: flex;
-  font-size: 16px;
-  cursor: pointer;
-  background-color: #f3f3f3;
-  color: #323232;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  transition: border-color 0.3s ease;
+// Styled components
 
-  &:hover {
-    background-color: #e6e6e6;
+const ReadMore = styled.span`
+  color: #0048ff;
+  cursor: pointer;
+  text-decoration: underline;
+`;
+const fadeInScale = keyframes`
+  from{
+    opacity: 0;
+    transform: translate(-50%, -50%) scale()(0.8);
+  }
+  to{
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 `;
+
+const FloatingTile = styled.div`
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  width: 100%;
+  padding: 20px;
+  background: #ffffffca;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  z-index: 1000;
+  animation: ${fadeInScale} 0.3s forwards ease-in-out;
+`;
+
+const CloseButton = styled.button`
+  margin-top: 10px;
+  padding: 5px 10px;
+  background: #ff5a5a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover {
+    background: #100c0c;
+  }
+`;
+
 const CompletionCheck = styled.div`
   width: 90%;
   padding: 14px;
-  font-size: 16px;
+  font-size: 18px;
   border-radius: 15px;
   transition: box-shadow 0.3s ease, border-color 0.3s ease;
 
@@ -203,9 +293,43 @@ const ControlsContainer = styled.div`
   margin-bottom: 20px;
   align-items: center;
   gap: 10px;
+  max-width: 100%;
   @media (max-width: 980px) {
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
+  }
+`;
+
+const Button = styled.button`
+  padding: 10px;
+  font-size: 16px;
+  width: 60%;
+  cursor: pointer;
+  background-color: #d9d9d9;
+  white-space: nowrap;
+  color: #323232;
+  border: none;
+  border-start-start-radius: 10px;
+  border-end-start-radius: 10px;
+  &:hover {
+    background-color: #e6e6e6;
+  }
+`;
+
+const SortDropdown = styled.select`
+  padding: 10px;
+  font-size: 16px;
+  width: 60%;
+  cursor: pointer;
+  background-color: #d9d9d9;
+  color: #323232;
+  border: none;
+  border-start-end-radius: 10px;
+  border-end-end-radius: 10px;
+
+  &:focus {
+    border-color: #80bfff;
+    outline: none;
   }
 `;
 
@@ -233,18 +357,20 @@ const TaskContainer = styled(motion.div)`
   justify-content: space-around;
   padding-top: 10px;
   width: 100%;
+  gap: 20px;
   max-width: 100%;
-
   @media (max-width: 730px) {
-    flex-direction: column;
     align-items: center;
   }
 `;
 
 const TaskTile = styled.div`
   padding: 20px;
-  width: 100%;
-  max-width: 350px;
+  position: relative;
+  margin-bottom: 25px;
+  max-width: 100%;
+  max-height: 100%;
+  height: 80%;
   border-radius: 15px;
   display: flex;
   flex-direction: column;
@@ -260,11 +386,6 @@ const TaskTile = styled.div`
 
   & > * {
     margin-bottom: 10px;
-  }
-
-  @media (max-width: 730px) {
-    max-height: fit-content;
-    width: 100%;
   }
 `;
 
@@ -326,21 +447,6 @@ const DeleteButton = styled.button`
 
 // Adjust other styling as needed for layout and spacing.
 
-const SortDropdown = styled.select`
-  padding: 10px;
-  font-size: 16px;
-  cursor: pointer;
-  background-color: #f3f3f3;
-  color: #323232;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  transition: border-color 0.3s ease;
-
-  &:focus {
-    border-color: #80bfff;
-    outline: none;
-  }
-`;
 const Details = styled.div`
   display: flex;
   justify-content: space-between;
@@ -353,6 +459,7 @@ const Details = styled.div`
     gap: 10px;
   }
 `;
+
 const Message = styled.div`
   font-size: 18px;
   color: #555;

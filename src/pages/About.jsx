@@ -10,7 +10,7 @@ const About = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        About the Task Manager
+        About Us
       </Title>
       <Description
         initial={{ opacity: 0 }}
@@ -55,10 +55,9 @@ const About = () => {
   );
 };
 
-// Styled-components with framer-motion animations
 const Container = styled.div`
   padding: 50px;
-  max-width: 700px;
+  max-width: 70%;
   margin: 0 auto;
   text-align: justify;
 `;

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion"; // Import Framer Motion
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import Form from "../components/Form";
 import TaskList from "../components/TaskList";
@@ -28,6 +28,8 @@ const Home = () => {
     setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
   };
 
+  const taskContainerRef = useRef(null);
+
   return (
     <div>
       <div
@@ -38,6 +40,7 @@ const Home = () => {
           paddingBottom: 50,
           backgroundColor: "#e4e2e2",
           borderRadius: 10,
+          
         }}
       >
         <Title
@@ -49,11 +52,15 @@ const Home = () => {
           <h1>TASK MANAGER</h1>
           <p>Add, Search, and Remove tasks as per your requirement.</p>
         </Title>
-        <Form addTask={(task) => addTask(task)} />
+        <Form
+          taskContainerRef={taskContainerRef}
+          addTask={(task) => addTask(task)}
+        />
       </div>
       <div>
         <TaskList
           tasks={tasks}
+          taskContainerRef={taskContainerRef}
           removeTask={removeTask}
           as={motion.div}
           initial="hidden"

@@ -33,26 +33,25 @@ export default Navs;
 
 // Styled Components
 const Navbar = styled.nav`
-  background-color: #343a40; /* Darker shade for navbar */
-  padding: 15px 20px;
+  background-color: #343a40;
   display: flex;
   justify-content: center;
-  align-items: center; /* Optional: to vertically center the content */
-  border-bottom: 2px solid #007bff; /* Optional: add accent color underline */
-  position: fixed; /* Fix the navbar to the top of the page */
-  top: 0; /* Ensure it stays at the top */
-  left: 0; /* Ensure it stays on the left side */
-  width: 100%; /* Ensure it stretches across the entire screen */
-  z-index: 1000; /* Make sure it stays above other content */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Optional: add shadow for better visibility */
+  align-items: center;
+  border-bottom: 2px solid #007bff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 `;
 
 const NavList = styled.ul`
   display: flex;
-  gap: 30px;
+  justify-items: center;
   list-style: none;
-  margin: 0;
-  padding: 0;
+  padding-inline-start: 0px;
+  gap: 20px;
 `;
 
 const NavItem = styled.li`
@@ -72,7 +71,6 @@ const StyledNavLink = styled(NavLink)`
     background-color: #495057;
   }
 
-  /* Apply active color when the link is active */
   ${({ isActive }) =>
     isActive &&
     `
